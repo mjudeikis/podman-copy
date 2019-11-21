@@ -38,9 +38,6 @@ func loadConfig(providerConfig, nodeName string) (config PodmanConfig, err error
 		if config.DaemonSetDisabled == "" {
 			config.DaemonSetDisabled = defaultDaemonSetDisabled
 		}
-		if config.StorageLocation == "" {
-			config.DaemonSetDisabled = defaultStorageDir
-		}
 	}
 
 	if _, err = resource.ParseQuantity(config.CPU); err != nil {

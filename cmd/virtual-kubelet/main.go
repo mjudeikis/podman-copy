@@ -50,7 +50,13 @@ func main() {
 		cancel()
 	}()
 
-	log.L = logruslogger.FromLogrus(logrus.NewEntry(logrus.StandardLogger()))
+	logrus.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+		//CallerPrettyfier: utillog.RelativeFilePathPrettier,
+	})
+	logrus.SetReportCaller(true)
+	logger := logruslogger.FromLogrus(logrus.NewEntry(logrus.StandardLogger()))
+	log.L = logger
 	trace.T = opencensus.Adapter{}
 
 	var opts root.Opts

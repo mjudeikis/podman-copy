@@ -108,15 +108,6 @@ func runRootCommand(ctx context.Context, s *provider.Store, c Opts) error {
 		return errors.Wrap(err, "could not create resource manager")
 	}
 
-	apiConfig, err := getAPIConfig(c)
-	if err != nil {
-		return err
-	}
-
-	if err := setupTracing(ctx, c); err != nil {
-		return err
-	}
-
 	initConfig := provider.InitConfig{
 		ConfigPath:        c.ProviderConfigPath,
 		NodeName:          c.NodeName,
@@ -194,12 +185,6 @@ func runRootCommand(ctx context.Context, s *provider.Store, c Opts) error {
 
 	go podInformerFactory.Start(ctx.Done())
 	go scmInformerFactory.Start(ctx.Done())
-
-	cancelHTTP, err := setupHTTPServer(ctx, p, apiConfig)
-	if err != nil {
-		return err
-	}
-	defer cancelHTTP()
 
 	go func() {
 		if err := pc.Run(ctx, c.PodSyncWorkers); err != nil && errors.Cause(err) != context.Canceled {

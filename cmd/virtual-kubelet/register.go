@@ -11,6 +11,7 @@ func registerPodman(s *provider.Store) {
 			cfg.ConfigPath,
 			cfg.NodeName,
 			cfg.OperatingSystem,
+			cfg.ResourceManager,
 		)
 	})
 }

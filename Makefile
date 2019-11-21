@@ -39,5 +39,5 @@ bin/virtual-kubelet: VERSION_FLAGS    := -ldflags='-X "main.buildVersion=$(BUILD
 bin/%:
 	CGO_ENABLED=0 go build -ldflags '-extldflags "-static"' -o bin/$(*) $(VERSION_FLAGS) ./cmd/$(*)
 
-run:
-	./bin/virtual-kubelet --provider podman --nodename podman --provider-config ./hack/podman-cfg.json
+run: clean build
+	./bin/virtual-kubelet --provider podman --nodename podman --provider-config ./deploy/systemd/podman-cfg.json --full-resync-period=10s
