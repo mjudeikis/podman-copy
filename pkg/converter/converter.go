@@ -31,19 +31,37 @@ func SplitPodName(key string) (namespace, name string) {
 	return keys[0], keys[1]
 }
 
-func KubeSpecToPodmanContainer(container v1.Container, podName string) iopodman.Create {
+func KubeSpecToPodmanContainer(pod v1.Pod, container v1.Container, podName string) iopodman.Create {
 	// TODO: Extend this to match most of the fields
 	var args []string
 	args = append(args, container.Image)
 	args = append(args, container.Command...)
 	args = append(args, container.Args...)
 	containerName := fmt.Sprintf("%s-%s", podName, container.Name)
-	return iopodman.Create{
+
+	// construct hostPath pairs for mount
+	var volumes []string
+	for _, podVolume := range pod.Spec.Volumes {
+		for _, containerVolume := range container.VolumeMounts {
+			if podVolume.HostPath != nil && podVolume.Name == containerVolume.Name {
+				volumes = append(volumes, fmt.Sprintf("%s:%s", podVolume.HostPath.Path, containerVolume.MountPath))
+			}
+		}
+	}
+
+	podmanPod := iopodman.Create{
 		Args:    args,
 		Command: &container.Command,
 		Name:    &containerName,
 		Pod:     &podName,
+		Volume:  &volumes,
 	}
+
+	if container.SecurityContext != nil {
+		podmanPod.Privileged = container.SecurityContext.Privileged
+	}
+
+	return podmanPod
 }
 
 // GetPodmanPod return podman pod with pod metadata in the label
