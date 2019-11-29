@@ -8,7 +8,7 @@ spec:
     command:
       - /bin/sleep
     args:
-      - 30s
+      - 300s
     imagePullPolicy: Always
     name: nginx
     resources:
@@ -20,7 +20,12 @@ spec:
       name: http
       protocol: TCP
     - containerPort: 443
-      name: https 
+      name: https
+    volumeMounts:
+    - mountPath: /tmp
+      name: temp
+    securityContext:
+      privileged: true
   dnsPolicy: ClusterFirst
   nodeSelector:
     kubernetes.io/role: agent
@@ -30,3 +35,8 @@ spec:
   tolerations:
   - key: virtual-kubelet.io/provider
     operator: Exists
+  volumes:
+  - hostPath:
+      path: /tmp/test
+      type: DirectoryOrCreate
+    name: temp

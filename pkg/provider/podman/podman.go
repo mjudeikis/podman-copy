@@ -67,7 +67,6 @@ func NewPodmanV0ProviderPodmanConfig(config PodmanConfig, nodeName, operatingSys
 		notifier: func(pod *v1.Pod) {},
 	}
 
-	go provider.reconcile()
 	return &provider, nil
 }
 

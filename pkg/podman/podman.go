@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -113,12 +114,33 @@ func (p podman) Create(ctx context.Context, pod *corev1.Pod) error {
 		p.log.Error("create pod failed", "err", err.Error())
 		return errors.VKError(err)
 	}
+
 	p.log.Info("pod created ", "podName ", podmanPodName)
+	// Create hostPath volumes if does not exist
+	for _, volume := range pod.Spec.Volumes {
+		if volume.HostPath != nil {
+			switch *volume.HostPath.Type {
+			case v1.HostPathDirectoryOrCreate:
+				err := os.MkdirAll(volume.HostPath.Path, os.FileMode(0755))
+				if err != nil {
+					return err
+				}
+			case v1.HostPathDirectory:
+				if _, err := os.Stat(volume.HostPath.Path); os.IsNotExist(err) {
+					return fmt.Errorf("volume %s does not exist", volume.Name)
+				}
+			default:
+				p.log.Debug("hostPath volume type %s is not supported", volume.HostPath.Type)
+			}
+		} else {
+			p.log.Debug("volume provider %s is not supported", volume.String())
+		}
+	}
 
 	// add containers in the pod
 	for _, c := range pod.Spec.Containers {
 		p.log.Info("create container ", "pod ", podmanPodName, " container ", c.Name)
-		container := converter.KubeSpecToPodmanContainer(c, podmanPodName)
+		container := converter.KubeSpecToPodmanContainer(*pod, c, podmanPodName)
 		p.c.Lock()
 		_, err := iopodman.CreateContainer().Call(ctx, &p.c.Connection, container)
 		p.c.Unlock()
