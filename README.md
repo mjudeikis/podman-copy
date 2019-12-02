@@ -2,7 +2,7 @@
 
 This is a Virtual Kubelet Provider implementation that manages containers in podman environment.
 
-*Important: Project is under development and currently only basic functionality is available* 
+*Important: Project is under development and currently only basic functionality is available*
 
 ## Purpose
 
@@ -52,12 +52,14 @@ podman ps
 
 ## Limitations
 
-Currently it support just plain pods running. There is a lot of missing as project is in active development,
+* Only `hostPath` is supported
+* Only one container per pod is supported
+* No `Secrets` or `ConfigMaps` is supported
 
 ## Misc pre-requisites
 
 ```
-yum install podman
+yum distro-sync --enablerepo=updates-testing install podman containers-common sudo
 systemctl enable --now io.podman.socket
 systemctl status io.podman.socket
 ```

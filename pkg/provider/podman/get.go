@@ -2,10 +2,11 @@ package podman
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
+
+	"github.com/virtual-kubelet/podman/pkg/converter"
 
 	//"github.com/davecgh/go-spew/spew"
 
@@ -18,7 +19,11 @@ import (
 // TODO impelment pod status fields in the struct we return for the data
 func (p *PodmanV0Provider) GetPod(ctx context.Context, namespace, name string) (pod *v1.Pod, err error) {
 	log.G(ctx).Infof("receive GetPod %s", namespace, name)
-	return p.c.GetByName(ctx, fmt.Sprintf("%s-%s", namespace, name))
+	podName, err := converter.BuildKeyFromNames(namespace, name)
+	if err != nil {
+		return nil, err
+	}
+	return p.c.GetByName(ctx, podName)
 }
 
 // GetContainerLogs retrieves the logs of a container by name from the provider.

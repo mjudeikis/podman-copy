@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/ghodss/yaml"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +32,8 @@ func SplitPodName(key string) (namespace, name string) {
 	return keys[0], keys[1]
 }
 
+// KubeSpecToPodmanContainer converts v1.Container to podman.Create spec. pod
+// argument is used to configure volumes and external configuration to container
 func KubeSpecToPodmanContainer(pod v1.Pod, container v1.Container, podName string) iopodman.Create {
 	// TODO: Extend this to match most of the fields
 	var args []string
@@ -59,12 +62,26 @@ func KubeSpecToPodmanContainer(pod v1.Pod, container v1.Container, podName strin
 
 	if container.SecurityContext != nil {
 		podmanPod.Privileged = container.SecurityContext.Privileged
+		// if we want to interact with undelaying hostPath
+		// TODO: make it separate configurable
+		podmanPod.Tty = container.SecurityContext.Privileged
 	}
+
+	if pod.Spec.HostNetwork {
+		podmanPod.Net = StringPtr("host")
+	}
+
+	var vars []string
+	for _, e := range pod.Spec.Containers[0].Env {
+		vars = append(vars, fmt.Sprintf("%s=%s", e.Name, e.Value))
+	}
+	podmanPod.Env = &vars
+	spew.Dump(podmanPod.Env)
 
 	return podmanPod
 }
 
-// GetPodmanPod return podman pod with pod metadata in the label
+// GetPodmanPod return podmanPod with v1.Pod metadata in the label
 func GetPodmanPod(key string, p *v1.Pod) (*iopodman.PodCreate, error) {
 	// preserve original pod spec into lables
 	pod := p.DeepCopy()
@@ -86,38 +103,16 @@ func GetPodmanPod(key string, p *v1.Pod) (*iopodman.PodCreate, error) {
 	return &podmanPod, nil
 }
 
-type PodmanPod struct {
-	Config struct {
-		ID           string            `json:"id"`
-		Name         string            `json:"name"`
-		Labels       map[string]string `json:"labels"`
-		CgroupParent string            `json:"cgroupParent"`
-		SharesCgroup bool              `json:"sharesCgroup"`
-		InfraConfig  struct {
-			MakeInfraContainer bool        `json:"makeInfraContainer"`
-			InfraPortBindings  interface{} `json:"infraPortBindings"`
-		} `json:"infraConfig"`
-		Created time.Time `json:"created"`
-		LockID  int       `json:"lockID"`
-	} `json:"Config"`
-	State struct {
-		CgroupPath       string `json:"cgroupPath"`
-		InfraContainerID string `json:"infraContainerID"`
-	} `json:"State"`
-	Containers []struct {
-		ID    string `json:"id"`
-		State string `json:"state"`
-	} `json:"Containers"`
-}
-
-func GetKubePod(ppodJson string) (*v1.Pod, error) {
-	var ppod PodmanPod
-	err := json.Unmarshal([]byte(ppodJson), &ppod)
+// GetKubePod returns v1.Pod from podman pod json
+// Kuberentes spec is cached in the podman labels
+func GetKubePod(podmanJSON string) (*v1.Pod, error) {
+	var pPod PodmanPod
+	err := json.Unmarshal([]byte(podmanJSON), &pPod)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := base64.StdEncoding.DecodeString(ppod.Config.Labels["pod"])
+	data, err := base64.StdEncoding.DecodeString(pPod.Config.Labels["pod"])
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +123,7 @@ func GetKubePod(ppodJson string) (*v1.Pod, error) {
 	}
 
 	// configure status for the kubePod
-	kpod.Status, err = GetPodStatus(ppod)
+	kpod.Status, err = GetPodStatus(pPod)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +131,18 @@ func GetKubePod(ppodJson string) (*v1.Pod, error) {
 	return &kpod, nil
 }
 
-func GetPodStatus(ppod PodmanPod) (v1.PodStatus, error) {
+// MarshalPodPod marshals podmanPod json into PodmanPod struct
+func MarshalPodPod(podmanJSON string) (*PodmanPod, error) {
+	var pPod *PodmanPod
+	err := json.Unmarshal([]byte(podmanJSON), pPod)
+	if err != nil {
+		return nil, err
+	}
+	return pPod, nil
+}
+
+// GetPodStatus returns v1.PodStatus from PodmanPod spec
+func GetPodStatus(pPod PodmanPod) (v1.PodStatus, error) {
 	now := metav1.NewTime(time.Now())
 	status := v1.PodStatus{}
 	status.StartTime = &now
@@ -157,7 +163,7 @@ func GetPodStatus(ppod PodmanPod) (v1.PodStatus, error) {
 		},
 	}
 
-	for _, c := range ppod.Containers {
+	for _, c := range pPod.Containers {
 		containerStatus := v1.ContainerStatus{}
 		containerStatus.Name = c.ID
 		containerStatus.Image = c.ID
@@ -167,7 +173,7 @@ func GetPodStatus(ppod PodmanPod) (v1.PodStatus, error) {
 			state = v1.ContainerState{
 				Running: &v1.ContainerStateRunning{
 					StartedAt: metav1.Time{
-						Time: ppod.Config.Created,
+						Time: pPod.Config.Created,
 					},
 				},
 			}
@@ -199,4 +205,9 @@ func GetPodStatus(ppod PodmanPod) (v1.PodStatus, error) {
 	}
 
 	return status, nil
+}
+
+// StringPtr returns pointer string
+func StringPtr(s string) *string {
+	return &s
 }
