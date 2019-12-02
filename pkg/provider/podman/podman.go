@@ -19,7 +19,7 @@ const (
 )
 
 // PodmanV0Provider implements the virtual-kubelet provider interface and stores pods in memory.
-type PodmanV0Provider struct { //nolint:golint
+type PodmanV0Provider struct {
 	nodeName           string
 	operatingSystem    string
 	config             PodmanConfig
@@ -32,12 +32,12 @@ type PodmanV0Provider struct { //nolint:golint
 }
 
 // PodmanProvider is like PodmanV0Provider, but implements the PodNotifier interface
-type PodmanProvider struct { //nolint:golint
+type PodmanProvider struct {
 	*PodmanV0Provider
 }
 
 // PodmanConfig contains a podman virtual-kubelet's configurable parameters.
-type PodmanConfig struct { //nolint:golint
+type PodmanConfig struct {
 	CPU    string `json:"cpu,omitempty"`
 	Memory string `json:"memory,omitempty"`
 	Pods   string `json:"pods,omitempty"`
@@ -67,6 +67,7 @@ func NewPodmanV0ProviderPodmanConfig(config PodmanConfig, nodeName, operatingSys
 		notifier: func(pod *v1.Pod) {},
 	}
 
+	go provider.reconcile()
 	return &provider, nil
 }
 

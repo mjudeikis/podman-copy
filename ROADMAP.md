@@ -4,7 +4,7 @@
 
 1. Move all errors to errdefs
 2. Sometimes podman operations hangs. Add context to all operations with timeouts
-3. Add support for 2 containers in the ppodman pod
+3. Add support for 2 containers in the podman pod
 
 ## Not so easy
 

@@ -4,17 +4,18 @@ metadata:
   name: busybox
 spec:
   containers:
-  - image: busybox
+  #- image: docker.io/arm64v8/bash:latest
+  - image: docker.io/library/busybox:latest
     command:
       - /bin/sleep
     args:
       - 300s
     imagePullPolicy: Always
-    name: nginx
+    name: busybox
     resources:
       requests:
-        memory: 1G
-        cpu: 1
+        memory: 50Mi
+        cpu: 100m
     ports:
     - containerPort: 80
       name: http

@@ -6,7 +6,10 @@ require (
 	9fans.net/go v0.0.2 // indirect
 	contrib.go.opencensus.io/exporter/jaeger v0.1.0
 	contrib.go.opencensus.io/exporter/ocagent v0.4.12
+	github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802
 	github.com/acroca/go-symbols v0.1.1 // indirect
+	github.com/buger/goterm v0.0.0-20181115115552-c206103e1f37
+	github.com/chbmuc/cec v0.0.0-20170405204755-573ad0b0369b // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/davidrjenni/reftools v0.0.0-20190827201643-0605d60846fb // indirect
 	github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c // indirect
