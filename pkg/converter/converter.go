@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/ghodss/yaml"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -65,6 +66,17 @@ func KubeSpecToPodmanContainer(pod v1.Pod, container v1.Container, podName strin
 		// TODO: make it separate configurable
 		podmanPod.Tty = container.SecurityContext.Privileged
 	}
+
+	if pod.Spec.HostNetwork {
+		podmanPod.Net = StringPtr("host")
+	}
+
+	var vars []string
+	for _, e := range pod.Spec.Containers[0].Env {
+		vars = append(vars, fmt.Sprintf("%s=%s", e.Name, e.Value))
+	}
+	podmanPod.Env = &vars
+	spew.Dump(podmanPod.Env)
 
 	return podmanPod
 }
@@ -193,4 +205,9 @@ func GetPodStatus(pPod PodmanPod) (v1.PodStatus, error) {
 	}
 
 	return status, nil
+}
+
+// StringPtr returns pointer string
+func StringPtr(s string) *string {
+	return &s
 }

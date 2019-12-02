@@ -38,11 +38,7 @@ vi  /etc/lxdm/lxdm.conf
 autologin=rpi
 ```
 
-7. Disable first boot
 
-```
-sudo rm /etc/systemd/system/graphical.target.wants/initial-setup.service.
-```
 
 8. Configure graphical target
 
@@ -54,7 +50,12 @@ sudo systemctl set-default graphical.target
 sudo rm /etc/systemd/system/graphical.target.wants/initial-setup.service.
 ```
 
+7. Disable first boot & sleep
 
+```
+sudo rm /etc/systemd/system/graphical.target.wants/initial-setup.service.
+sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+```
 
 7. Copy config files from dev machine to
 destination
