@@ -1,40 +1,51 @@
-# Virtual Kubelet Podman Provider
+# Virtual Kubelet Podman Provider - Beta
 
-This is a Virtual Kubelet Provider implementation that manages containers in podman environment.
+Virtual Kubelet Provider implementation to manages containers in
+podman environment.
 
 *Important: Project is under development and currently only basic functionality is available*
 
 ## Purpose
 
-The whole point of the Virtual Kubelet project is to provide an interface for container runtimes that don't conform to the standard node-based model. The [Kubelet](https://github.com/kubernetes/kubernetes/tree/master/pkg/kubelet) codebase is the comprehensive standard CRI node agent and this Provider is not attempting to recreate that..
+The whole point of the Virtual Kubelet project is to provide an interface for
+container runtimes that don't conform to the standard node-based model. The
+[Kubelet](https://github.com/kubernetes/kubernetes/tree/master/pkg/kubelet)
+codebase is the comprehensive standard CRI node agent and this Provider is not
+attempting to recreate that.
 
 ## Dependencies
 
-[Podman](https://podman.io/getting-started/installation.html) must be installed on the recieving node.
-Podman provider uses [varlink](https://www.projectatomic.io/blog/2018/05/podman-varlink/) podman [API](https://podman.io/blogs/2019/01/16/podman-varlink.html) to communicate. This must be enabled for podman provider to work.
+[Podman](https://podman.io/getting-started/installation.html) must be installed
+on the provider node. Podman provider uses [varlink](https://www.projectatomic.io/blog/2018/05/podman-varlink/)
+podman [API](https://podman.io/blogs/2019/01/16/podman-varlink.html) to communicate.
+This must be enabled for podman provider to work.
 
 ## Running
 
-### Prod
+### Production
+
+To run podman provider in production configuration requires minimal configuration
 
 ```bash
+# create vkubelet and kubernetes directories
 mkdir -p /etc/kubernetes/ /etc/vkubelet/
+# copy kubeconfig into kubernetes directory
 cp $KUBECONFIG /etc/kubernetes/admin.conf
-# cp ~/.kube/config /etc/kubernetes/admin.conf
-# Copy systemd file into the destination node
+# Copy systemd file into the destination node.
 cp ./deploy/systemd/vkubelet-podman.service /usr/lib/systemd/system/vkubelet-podman.service
-# Change according the requirments. Configured in systemd file.
+# Copy vkubelet configuration file. Modify it based on your requirments
 cp ./deploy/systemd/podman-cfg.json /etc/vkubelet/podman-cfg.json
+# Copy vkubelet binary
 cp ./bin/virtual-kubelet .usr/local/bin/virtual-kubelet
-# reload and start
+# Reload and start vkubelet daemon
 systemctl daemon-reload
 systemctl start vkubelet-podman
 systemctl status vkubelet-podman
 ```
 
-### Dev
+### Development
 
-For local development it is easiest to use `minikube`
+For local development easiers way to iterate is to use use `[minikube](TODO: MINIKUBE_URL)`
 
 ```bash
 #start minikube
@@ -52,11 +63,11 @@ podman ps
 
 ## Limitations
 
-* Only `hostPath` is supported
+* Only `hostPath` volume provider is supported
 * Only one container per pod is supported
-* No `Secrets` or `ConfigMaps` is supported
+* No `Secrets` or `ConfigMaps` is supported yet
 
-## Misc pre-requisites
+## Podman instaliation & configuration
 
 ```
 yum distro-sync --enablerepo=updates-testing install podman containers-common sudo
