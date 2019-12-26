@@ -1,7 +1,7 @@
 # Virtual Kubelet Podman Provider - Beta
 
 Virtual Kubelet Provider implementation to manages containers in
-podman environment.
+podman environments.
 
 *Important: Project is under development and currently only basic functionality is available*
 
@@ -45,7 +45,7 @@ systemctl status vkubelet-podman
 
 ### Development
 
-For local development easiers way to iterate is to use use `[minikube](TODO: MINIKUBE_URL)`
+For local development it is easiest way to iterate is to use use `[minikube](https://github.com/kubernetes/minikube)`
 
 ```bash
 #start minikube

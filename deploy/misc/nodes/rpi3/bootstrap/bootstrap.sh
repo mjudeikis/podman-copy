@@ -10,7 +10,7 @@ if [[ ! -f "$FILE" ]]; then
     # update
     yum update -y
     # install git and podman
-    yum install --enablerepo=updates-testing git podman libvarlink-util libvarlink containers-common     -y
+    yum install --enablerepo=updates-testing git podman libvarlink-util libvarlink containers-common -y
     # enable podman
     systemctl enable io.podman.service
     systemctl start io.podman.service
@@ -19,6 +19,13 @@ if [[ ! -f "$FILE" ]]; then
     dnf groupinstall -y "LXDE Desktop" -y
     systemctl set-default graphical.target
     systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+
+    rm -rf /usr/lib/systemd/system/initial-setup.service
+
+    # configure users
+    useradd rpi
+    # auto-login
+    sed -i "s/# autologin=dgod/autologin=rpi/g" /etc/lxdm/lxdm.conf
 
     # boostrap node
     mkdir -p /etc/kubernetes/ /etc/vkubelet/
@@ -46,6 +53,10 @@ ExecStart=/usr/local/bin/virtual-kubelet --provider podman --nodename $HOSTNAME 
 [Install]
 WantedBy=multi-user.target
 EOF
+
+  # download vk podman binary
+  curl https://raw.githubusercontent.com/mjudeikis/podman/master/bin/virtual-kubelet-arm -o /usr/local/bin/virtual-kubelet
+  chmod 755 /usr/local/bin/virtual-kubelet
 
     touch /root/bootstrap.done
     exit 0
